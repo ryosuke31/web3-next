@@ -1,86 +1,90 @@
-import type { NextPage } from 'next'
-import Head from 'next/head'
-import Image from 'next/image'
+import type { NextPage } from 'next';
+import { useState } from 'react';
+import Web3 from 'web3';
+import { AbiItem } from 'web3-utils';
+import ZCContract from '../build/contracts/ZennCoin.json';
+import { ZennCoin } from '../types/abi/ZennCoin';
+
+// プロバイダの設定
+const web3 = new Web3(new Web3.providers.HttpProvider(`http://127.0.0.1:7545`));
+
+// コントラクトのアドレス
+const address = '0x8F4D574EFe77e00af32C54d2A0D07F7C53cb56bF';
+
+const ABI = ZCContract.abi as any as AbiItem;
+// コントラクトのインスタンス
+const contract = new web3.eth.Contract(ABI, address) as unknown as ZennCoin;
+
+const walletAddressUserA = '0x4CF3194C55d4A95bDEC183834f94194F5861e510';
+const walletAddressUserB = '0xae9617EBb3976eB9BeB9dC4cd7f667f82d2BD55F';
 
 const Home: NextPage = () => {
+  const [balanceZcUserA, setBalanceZcUserA] = useState(''); // ZennCoin残高 UserA
+  const [balanceEthUserA, setBalanceEthUserA] = useState(''); // ETH残高 UserA
+  const [balanceZcUserB, setBalanceZcUserB] = useState(''); // ZennCoin残高 UserB
+  const [balanceEthUserB, setBalanceEthUserB] = useState(''); // ETH残高 UserB
+  const getBalance = async (userType: string) => {
+    if (userType === 'a') {
+      setBalanceZcUserA(await contract.methods.balanceOf(walletAddressUserA).call());
+      setBalanceEthUserA(await web3.eth.getBalance(walletAddressUserA));
+    } else if (userType === 'b') {
+      setBalanceZcUserB(await contract.methods.balanceOf(walletAddressUserB).call());
+      setBalanceEthUserB(await web3.eth.getBalance(walletAddressUserB));
+    }
+  };
+
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center py-2">
-      <Head>
-        <title>Create Next App</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-
-      <main className="flex w-full flex-1 flex-col items-center justify-center px-20 text-center">
-        <h1 className="text-6xl font-bold">
-          Welcome to{' '}
-          <a className="text-blue-600" href="https://nextjs.org">
-            Next.js!
-          </a>
-        </h1>
-
-        <p className="mt-3 text-2xl">
-          Get started by editing{' '}
-          <code className="rounded-md bg-gray-100 p-3 font-mono text-lg">
-            pages/index.tsx
-          </code>
-        </p>
-
-        <div className="mt-6 flex max-w-4xl flex-wrap items-center justify-around sm:w-full">
-          <a
-            href="https://nextjs.org/docs"
-            className="mt-6 w-96 rounded-xl border p-6 text-left hover:text-blue-600 focus:text-blue-600"
-          >
-            <h3 className="text-2xl font-bold">Documentation &rarr;</h3>
-            <p className="mt-4 text-xl">
-              Find in-depth information about Next.js features and its API.
-            </p>
-          </a>
-
-          <a
-            href="https://nextjs.org/learn"
-            className="mt-6 w-96 rounded-xl border p-6 text-left hover:text-blue-600 focus:text-blue-600"
-          >
-            <h3 className="text-2xl font-bold">Learn &rarr;</h3>
-            <p className="mt-4 text-xl">
-              Learn about Next.js in an interactive course with quizzes!
-            </p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/canary/examples"
-            className="mt-6 w-96 rounded-xl border p-6 text-left hover:text-blue-600 focus:text-blue-600"
-          >
-            <h3 className="text-2xl font-bold">Examples &rarr;</h3>
-            <p className="mt-4 text-xl">
-              Discover and deploy boilerplate example Next.js projects.
-            </p>
-          </a>
-
-          <a
-            href="https://vercel.com/import?filter=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className="mt-6 w-96 rounded-xl border p-6 text-left hover:text-blue-600 focus:text-blue-600"
-          >
-            <h3 className="text-2xl font-bold">Deploy &rarr;</h3>
-            <p className="mt-4 text-xl">
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
-
-      <footer className="flex h-24 w-full items-center justify-center border-t">
-        <a
-          className="flex items-center justify-center gap-2"
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <Image src="/vercel.svg" alt="Vercel Logo" width={72} height={16} />
-        </a>
-      </footer>
+    <div className="m-5">
+      <h2>UserA Info</h2>
+      {balanceZcUserA ? (
+        <table className="table-auto">
+          <thead>
+            <tr>
+              <th className="px-4 py-2">ZennCoin Balance</th>
+              <th className="px-4 py-2">ETH Balance</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td className="border px-4 py-2">{balanceZcUserA}</td>
+              <td className="border px-4 py-2">{balanceEthUserA}</td>
+            </tr>
+          </tbody>
+        </table>
+      ) : (
+        <div>「UserA 残高を取得」を押してください</div>
+      )}
+      <h2>UserB Info</h2>
+      {balanceZcUserB ? (
+        <table className="table-auto">
+          <thead>
+            <tr>
+              <th className="px-4 py-2">ZennCoin Balance</th>
+              <th className="px-4 py-2">ETH Balance</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td className="border px-4 py-2">{balanceZcUserB}</td>
+              <td className="border px-4 py-2">{balanceEthUserB}</td>
+            </tr>
+          </tbody>
+        </table>
+      ) : (
+        <div>「UserB 残高を取得」を押してください</div>
+      )}
+      <button
+        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        onClick={() => getBalance('a')}>
+        UserA 残高を取得
+      </button>
+      <button
+        className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded ml-5"
+        onClick={() => getBalance('b')}>
+        UserB 残高を取得
+      </button>
     </div>
-  )
-}
+  );
+};
 
-export default Home
+export default Home;
